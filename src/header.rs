@@ -30,6 +30,10 @@ pub enum WarcHeader {
     Truncated,
     WarcType,
     WarcInfoID,
+    Title,
+    CanonicalURI,
+    PredictedLanguage,
+    AcquisitionDate,
     Unknown(String),
 }
 
@@ -61,6 +65,10 @@ impl Display for WarcHeader {
             WarcHeader::Truncated => "WARC-Truncated",
             WarcHeader::WarcType => "WARC-Type",
             WarcHeader::WarcInfoID => "WARC-Warcinfo-ID",
+            WarcHeader::Title => "LCC-Title",
+            WarcHeader::CanonicalURI => "LCC-Canonical-URI",
+            WarcHeader::PredictedLanguage => "LCC-Predicted-Language",
+            WarcHeader::AcquisitionDate => "LCC-Acquisition-Date",
             WarcHeader::Unknown(ref string) => string,
         };
         write!(f, "{}", stringified)
@@ -90,6 +98,10 @@ impl<S: AsRef<str>> From<S> for WarcHeader {
             "WARC-Truncated" => WarcHeader::Truncated,
             "WARC-Type" => WarcHeader::WarcType,
             "WARC-Warcinfo-ID" => WarcHeader::WarcInfoID,
+            "LCC-Title" => WarcHeader::Title,
+            "LCC-Canonical-URI" => WarcHeader::CanonicalURI,
+            "LCC-Predicted-Language" => WarcHeader::PredictedLanguage,
+            "LCC-Acquisition-Date" => WarcHeader::AcquisitionDate,
             _ => WarcHeader::Unknown(lower),
         }
     }
