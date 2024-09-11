@@ -30,6 +30,7 @@ pub enum WarcHeader {
     Truncated,
     WarcType,
     WarcInfoID,
+    ArchiveFormat,
     Title,
     CanonicalURI,
     PredictedLanguage,
