@@ -1,6 +1,6 @@
 use chrono::prelude::*;
 use std::borrow::Cow;
-use std::collections::HashMap;
+use indexmap::map::IndexMap;
 use std::fmt;
 use std::io::Read;
 
@@ -78,17 +78,17 @@ pub struct RawRecordHeader {
     /// The WARC standard version this record reports conformance to.
     pub version: String,
     /// All headers that are part of this record.
-    pub headers: HashMap<WarcHeader, Vec<u8>>,
+    pub headers: IndexMap<WarcHeader, Vec<u8>>,
 }
 
-impl AsRef<HashMap<WarcHeader, Vec<u8>>> for RawRecordHeader {
-    fn as_ref(&self) -> &HashMap<WarcHeader, Vec<u8>> {
+impl AsRef<IndexMap<WarcHeader, Vec<u8>>> for RawRecordHeader {
+    fn as_ref(&self) -> &IndexMap<WarcHeader, Vec<u8>> {
         &self.headers
     }
 }
 
-impl AsMut<HashMap<WarcHeader, Vec<u8>>> for RawRecordHeader {
-    fn as_mut(&mut self) -> &mut HashMap<WarcHeader, Vec<u8>> {
+impl AsMut<IndexMap<WarcHeader, Vec<u8>>> for RawRecordHeader {
+    fn as_mut(&mut self) -> &mut IndexMap<WarcHeader, Vec<u8>> {
         &mut self.headers
     }
 }
@@ -98,7 +98,7 @@ impl std::convert::TryFrom<RawRecordHeader> for Record<EmptyBody> {
     fn try_from(mut headers: RawRecordHeader) -> Result<Self, WarcError> {
         headers
             .as_mut()
-            .remove(&WarcHeader::ContentLength)
+            .swap_remove(&WarcHeader::ContentLength)
             .ok_or(WarcError::MissingHeader(WarcHeader::ContentLength))
             .and_then(|vec| {
                 String::from_utf8(vec).map_err(|_| {
@@ -108,7 +108,7 @@ impl std::convert::TryFrom<RawRecordHeader> for Record<EmptyBody> {
 
         let record_type = headers
             .as_mut()
-            .remove(&WarcHeader::WarcType)
+            .swap_remove(&WarcHeader::WarcType)
             .ok_or(WarcError::MissingHeader(WarcHeader::WarcType))
             .and_then(|vec| {
                 String::from_utf8(vec).map_err(|_| {
@@ -122,7 +122,7 @@ impl std::convert::TryFrom<RawRecordHeader> for Record<EmptyBody> {
 
         let record_id = headers
             .as_mut()
-            .remove(&WarcHeader::RecordID)
+            .swap_remove(&WarcHeader::RecordID)
             .ok_or(WarcError::MissingHeader(WarcHeader::RecordID))
             .and_then(|vec| {
                 String::from_utf8(vec).map_err(|_| {
@@ -132,7 +132,7 @@ impl std::convert::TryFrom<RawRecordHeader> for Record<EmptyBody> {
 
         let record_date = headers
             .as_mut()
-            .remove(&WarcHeader::Date)
+            .swap_remove(&WarcHeader::Date)
             .ok_or(WarcError::MissingHeader(WarcHeader::Date))
             .and_then(|vec| {
                 String::from_utf8(vec).map_err(|_| {
@@ -168,7 +168,7 @@ impl std::fmt::Display for RawRecordHeader {
 #[derive(Default)]
 pub struct RecordBuilder {
     value: Record<BufferedBody>,
-    broken_headers: HashMap<WarcHeader, Vec<u8>>,
+    broken_headers: IndexMap<WarcHeader, Vec<u8>>,
     last_error: Option<WarcError>,
 }
 
@@ -607,7 +607,7 @@ impl Default for Record<BufferedBody> {
         Record {
             headers: RawRecordHeader {
                 version: "1.0".to_string(),
-                headers: HashMap::new(),
+                headers: IndexMap::new(),
             },
             record_date: Utc::now(),
             record_id: Record::<BufferedBody>::generate_record_id(),
@@ -623,7 +623,7 @@ impl Default for Record<EmptyBody> {
         Record {
             headers: RawRecordHeader {
                 version: "1.0".to_string(),
-                headers: HashMap::new(),
+                headers: IndexMap::new(),
             },
             record_date: Utc::now(),
             record_id: Record::<EmptyBody>::generate_record_id(),
@@ -739,7 +739,7 @@ impl RecordBuilder {
         }
 
         if is_ok {
-            self.broken_headers.remove(&key);
+            self.broken_headers.swap_remove(&key);
         }
 
         self
